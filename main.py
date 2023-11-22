@@ -8,7 +8,7 @@ def link_grabber(links):
         for link in links:
             if link:
                 user_link_parse(link)
-                time.sleep(2)
+                time.sleep(3)
             else:
                  pass
 

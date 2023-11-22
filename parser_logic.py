@@ -1,11 +1,16 @@
 import json
-import requests
-from datetime import datetime, date
-from urllib.parse import urlparse
-from creds import token
+import asyncio
 import re
+import requests
+import time
+from datetime import datetime
+from urllib.parse import urlparse
+from creds import vk_token, tg_token
+from bot import send_message
+#from aiogram import Bot, Dispatcher
 
 url = 'https://vk.com/inorz'
+
 
 
 '''Парсим ссылку'''
@@ -40,7 +45,7 @@ def user_link_parse(link):
 
 '''Получаем словарь постов с аккаунта или группы по id'''
 def get_posts_id(id):
-    url = f"https://api.vk.com/method/wall.get?owner_id={id}&count={3}&extended=1&v=5.131&access_token={token}"
+    url = f"https://api.vk.com/method/wall.get?owner_id={id}&count={3}&extended=1&v=5.131&access_token={vk_token}"
     response = requests.get(url)
     data = json.loads(response.text)
     if 'error' not in data:
@@ -52,7 +57,7 @@ def get_posts_id(id):
 
 '''Получаем словарь постов с аккаунта или группы по короткому имени'''
 def get_posts_name(name):
-    url = f"https://api.vk.com/method/wall.get?domain={name}&count={3}&extended=1&v=5.131&access_token={token}"
+    url = f"https://api.vk.com/method/wall.get?domain={name}&count={3}&extended=1&v=5.131&access_token={vk_token}"
     response = requests.get(url)
     data = json.loads(response.text)
     if 'error' not in data:
@@ -63,9 +68,12 @@ def get_posts_name(name):
         pass
 
 '''Из вложенного словаря достаем отдельные посты и офрмляем для пересылки'''
+
 def from_posts_get_post(data):
     num = (len(data['response']['items']))
     items = data['response']['items']
+
+    loop = asyncio.get_event_loop()
 
     for i in range(num):
         text = items[i]['text']
@@ -76,9 +84,18 @@ def from_posts_get_post(data):
             owner_id = items[i]['owner_id']
             id_post = items[i]['id']
             result = f"{text}\n\nДата публикации: {date}\nСсылка: https://vk.com/wall{owner_id}_{id_post}"
+            time.sleep(3)
+            
+            task = loop.create_task(send_message(result))
+            loop.run_until_complete(task)
+
             print(result)
         else:
             print('Пост не за сегодня')
             pass
+
+
+
+
 
 #user_link_parse(url)
