@@ -7,9 +7,9 @@ from datetime import datetime
 from urllib.parse import urlparse
 from creds import vk_token
 from bot import send_message
-from redisConfig import r
+from redisConfig import rc
 
-url = 'https://vk.com/id535331631'
+#url = 'https://vk.com/id535331631'
 
 '''Парсим ссылку'''
 
@@ -45,7 +45,7 @@ def user_link_parse(link):
 '''Получаем словарь постов с аккаунта или группы по id'''
 
 def get_posts_id(id, name):
-    url = f"https://api.vk.com/method/wall.get?owner_id={id}&count={2}&extended=1&v=5.199&access_token={vk_token}"
+    url = f"https://api.vk.com/method/wall.get?owner_id={id}&count={5}&extended=1&v=5.199&access_token={vk_token}"
     response = requests.get(url)
     data = json.loads(response.text)
     if 'error' not in data:
@@ -58,7 +58,7 @@ def get_posts_id(id, name):
 '''Получаем словарь постов с аккаунта или группы по короткому имени'''
 
 def get_posts_name(shortname,name):
-    url = f"https://api.vk.com/method/wall.get?domain={shortname}&count={2}&extended=1&v=5.199&access_token={vk_token}"
+    url = f"https://api.vk.com/method/wall.get?domain={shortname}&count={5}&extended=1&v=5.199&access_token={vk_token}"
     response = requests.get(url)
     data = json.loads(response.text)
     if 'error' not in data:
@@ -74,7 +74,6 @@ def get_page_name_by_id(id):
 
     if  str(id).startswith('-'):
         id = id.split('-')
-        print(id)
         url_group = f"https://api.vk.com/method/groups.getById?group_id={id[1]}&v=5.199&access_token={vk_token}"
         response = requests.get(url_group)
         data = json.loads(response.text)
@@ -123,19 +122,29 @@ def from_posts_get_post(data, name):
 
             owner_id = items[i]['owner_id']
             id_post = items[i]['id']
-            if len(text) > 3950:
-                text_short = text[:3950]
-                result = f"Источник: {name}\n\n{text_short}\n..полный текст по ссылке..\n\nДата публикации: {date}\nСсылка: https://vk.com/wall{owner_id}_{id_post}"
+            key = f'{owner_id}_{id_post}'
+            value = f'{owner_id}_{id_post}'
+
+        #проверяем есть ли сообщение в кэше редиса
+
+            if rc.check_n_write(name,key, value):
+                pass
             else:
-                result = f"Источник: {name}\n\n{text}\n\nДата публикации: {date}\nСсылка: https://vk.com/wall{owner_id}_{id_post}"
-            time.sleep(3)
 
-            task = loop.create_task(send_message(result))
-            loop.run_until_complete(task)
+        #проверяем на лимит текста для телеграм        
+                if len(text) > 3950:
+                    text_short = text[:3950]
+                    result = f"Источник: {name}\n\n{text_short}\n..полный текст по ссылке..\n\nДата публикации: {date}\nСсылка: https://vk.com/wall{owner_id}_{id_post}"
+                else:
+                    result = f"Источник: {name}\n\n{text}\n\nДата публикации: {date}\nСсылка: https://vk.com/wall{owner_id}_{id_post}"
+                time.sleep(3)
 
-            print(result)
+                task = loop.create_task(send_message(result))
+                loop.run_until_complete(task)
+
+                #print(result)
         else:
-            print('Пост не за сегодня')
+            #print('Пост не за сегодня')
             pass
 
-user_link_parse(url)
+#user_link_parse(url)

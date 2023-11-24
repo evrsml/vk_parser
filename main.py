@@ -2,6 +2,8 @@ from googleAPI import values
 import time
 from parser_logic import user_link_parse
 
+
+'''входная точка приложения'''
 def link_grabber(links):
 
     while True:
@@ -12,9 +14,9 @@ def link_grabber(links):
             else:
                  pass
 
-showq = link_grabber(values)
+link_grabber(values)
 
-print(showq)
+
 
 
 
