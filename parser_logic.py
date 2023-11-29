@@ -3,13 +3,19 @@ import asyncio
 import re
 import requests
 import time
+import logging
 from datetime import datetime
 from urllib.parse import urlparse
 from creds import vk_token
 from bot import send_message
 from redisConfig import rc
 
-#url = 'https://vk.com/id535331631'
+logging.basicConfig(level=logging.DEBUG,
+                  format='%(asctime)s %(levelname)s %(message)s',
+                  filename='app.log',
+                  filemode='w')
+
+#url= 'https://vk.com/ufa_sluhi'
 
 '''Парсим ссылку'''
 
@@ -52,7 +58,8 @@ def get_posts_id(id, name):
         from_posts_get_post(data, name)
         return data
     else:
-        print(data['error']['error_msg'])
+        logging.error('Ошибка в ответе ВК: %s', data)
+        #print(data['error']['error_msg'])
         pass
 
 '''Получаем словарь постов с аккаунта или группы по короткому имени'''
@@ -65,7 +72,8 @@ def get_posts_name(shortname,name):
         from_posts_get_post(data, name)
         return data
     else:
-        print(data['error']['error_msg'])
+        logging.error('Ошибка в ответе ВК: %s', data)
+        #print(data['error']['error_msg'])
         pass
 
 '''Получаем название паблика или аккаунта по айди'''
@@ -127,7 +135,7 @@ def from_posts_get_post(data, name):
 
         #проверяем есть ли сообщение в кэше редиса
 
-            if rc.check_n_write(name,key, value):
+            if rc.check_n_write(key, value):
                 pass
             else:
 
@@ -141,9 +149,11 @@ def from_posts_get_post(data, name):
 
                 task = loop.create_task(send_message(result))
                 loop.run_until_complete(task)
-
+                logging.info('Пересылаем сообщение в бот %s')
+                
                 #print(result)
         else:
+            logging.info('Пост не за сегодня: %s', date_from_post)
             #print('Пост не за сегодня')
             pass
 
