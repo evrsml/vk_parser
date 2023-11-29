@@ -1,5 +1,6 @@
-from googleAPI import values
+
 import time
+from googleAPI import values
 from parser_logic import user_link_parse
 
 
@@ -14,7 +15,8 @@ def link_grabber(links):
             else:
                  pass
 
-link_grabber(values)
+if __name__ == "__main__":
+    link_grabber(values)
 
 
 
