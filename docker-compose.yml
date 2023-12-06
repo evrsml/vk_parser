@@ -1,0 +1,31 @@
+services:
+  redis:
+    image: redis:6.2.12-bullseye
+    restart: always
+    volumes: 
+       - /tmp:/data
+    # to get logs from journald: journalctl -ur redis
+    logging:
+      driver: journald
+      options:
+        tag: redis
+
+  vk_parser:
+    image: vk_parser_image
+    build: .
+    restart: always
+    depends_on:
+      - redis
+    ports:
+      - '127.0.0.1:5000:5000'
+    command: vk_parser_cont
+    # mapping this folder with folder inside container
+    volumes:
+      - /usr/local/bin/vk_parser:/app
+    # to get logs from journald: journalctl -ur vk
+    logging:
+      driver: journald
+      options:
+        tag: vk
+
+
